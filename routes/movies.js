@@ -3,7 +3,7 @@ const { celebrate, Joi } = require('celebrate');
 const { getMovies, createMovie, deleteMovie } = require('../controllers/movies');
 const auth = require('../middlewares/auth');
 
-router.get('/movies', getMovies);
+router.get('/movies', auth, getMovies);
 
 router.post('/movies', celebrate({
   body: Joi.object().keys({
@@ -25,6 +25,6 @@ router.delete('/movies/movieId', celebrate({
   body: Joi.object().keys({
     movieId: Joi.string().required(),
   }),
-}), deleteMovie);
+}), auth, deleteMovie);
 
 module.exports = router;
