@@ -2,10 +2,30 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const User = require('../models/user');
 const ValidationError = require('../errors/validation-error');
-const CastError = require('../errors/cast-error');
-const ForbiddenError = require('../errors/forbidden-error');
 const MongoError = require('../errors/mongo-error');
 const AuthError = require('../errors/auth-error');
+const NotFoundError = require('../errors/not-found-error');
+
+const { NODE_ENV, JWT_SECRET } = process.env;
+
+module.exports.login = (req, res, next) => {
+  const { email, password } = req.body;
+  return User.findUserByCredentials(email, password)
+    .then((user) => {
+      const token = jwt.sign(
+        { _id: user._id },
+        NODE_ENV === 'production' ? JWT_SECRET : 'dev-secret',
+        { expiresIn: '7d' },
+      );
+      res.send({ token });
+      next();
+    })
+    .catch(() => {
+      const error = new AuthError('Неправильная почта или пароль');
+      next(error);
+    })
+    .catch(next);
+};
 
 module.exports.getUserMe = (req, res, next) => {
   User.findById(req.user._id)
@@ -19,7 +39,7 @@ module.exports.updateUser = (req, res, next) => {
     { name: name.toString(), email: email.toString() }, { runValidators: true })
     .then((user) => {
       if (user === null) {
-        throw new CastError('Пользователь с указанным id не найдена');
+        throw new NotFoundError('Пользователь с указанным id не найден');
       } else {
         res.send({ data: user });
       }
@@ -27,12 +47,6 @@ module.exports.updateUser = (req, res, next) => {
     .catch((err) => {
       if (err.name === 'ValidationError') {
         const error = new ValidationError('Переданы некорректные данные пользователя');
-        next(error);
-      } else if (err.name === 'CastError') {
-        const error = new CastError('Пользователь с указанным id не найден');
-        next(error);
-      } else if (err.name === 'TypeError') {
-        const error = new ForbiddenError('Нельзя редактировать чужого пользователя!');
         next(error);
       } else {
         next(err);
@@ -67,19 +81,4 @@ module.exports.createUser = (req, res, next) => {
         next(err);
       }
     });
-};
-
-module.exports.login = (req, res, next) => {
-  const { email, password } = req.body;
-  return User.findUserByCredentials(email, password)
-    .then((user) => {
-      const token = jwt.sign({ _id: user._id }, 'super-strong-secret', { expiresIn: '7d' });
-      res.send({ token });
-      next();
-    })
-    .catch(() => {
-      const error = new AuthError('Невозможно авторизоваться');
-      next(error);
-    })
-    .catch(next);
 };

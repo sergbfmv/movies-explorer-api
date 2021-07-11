@@ -1,5 +1,5 @@
 const Movie = require('../models/movie');
-const CastError = require('../errors/cast-error');
+const NotFoundError = require('../errors/not-found-error');
 const ValidationError = require('../errors/validation-error');
 const ForbiddenError = require('../errors/forbidden-error');
 
@@ -52,28 +52,13 @@ module.exports.deleteMovie = (req, res, next) => {
   Movie.findOneAndRemove({ movieId: req.body.movieId })
     .then((movie) => {
       if (movie === null) {
-        throw new CastError('Фильм не найден');
+        throw new NotFoundError('Фильм не найден');
       }
       if (movie.owner === req.user._id) {
         throw new ForbiddenError('Нельзя удалять чужие фильмы!');
       }
-      Movie.findByIdAndRemove(req.movieId)
-        .then((item) => res.send({ data: item }))
-        .catch((err) => {
-          if (err.name === 'CastError') {
-            const error = new CastError('Фильм с указанным id не найден');
-            next(error);
-          } else {
-            next(err);
-          }
-        });
+      return Movie.findByIdAndRemove(req.movieId)
+        .then((item) => res.send({ data: item }));
     })
-    .catch((err) => {
-      if (err.name === 'TypeError') {
-        const error = new CastError('Фильм с указанным id не найден');
-        next(error);
-      } else {
-        next(err);
-      }
-    });
+    .catch(next);
 };

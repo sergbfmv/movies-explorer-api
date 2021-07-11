@@ -1,8 +1,8 @@
-class CastError extends Error {
+class NotFoundError extends Error {
   constructor(message) {
     super(message);
     this.statusCode = 404;
   }
 }
 
-module.exports = CastError;
+module.exports = NotFoundError;
