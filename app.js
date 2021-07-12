@@ -2,11 +2,15 @@ const express = require('express');
 const mongoose = require('mongoose');
 const bodyParser = require('body-parser');
 require('dotenv').config();
+const helmet = require('helmet');
+const limiter = require('./middlewares/rate-limiter');
 
 const { PORT = 3000 } = process.env;
 const routers = require('./routes/index');
 
 const app = express();
+
+app.use(limiter);
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -17,6 +21,8 @@ mongoose.connect('mongodb://localhost:27017/bitfilmsdb', {
   useFindAndModify: false,
   useUnifiedTopology: true,
 });
+
+app.use(helmet());
 
 app.use('/', routers);
 

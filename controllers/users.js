@@ -35,23 +35,30 @@ module.exports.getUserMe = (req, res, next) => {
 
 module.exports.updateUser = (req, res, next) => {
   const { name, email } = req.body;
-  User.findByIdAndUpdate(req.user._id,
-    { name: name.toString(), email: email.toString() }, { runValidators: true })
+  User.findOne({ email })
     .then((user) => {
-      if (user === null) {
-        throw new NotFoundError('Пользователь с указанным id не найден');
-      } else {
-        res.send({ data: user });
+      if (user !== null) {
+        throw new MongoError('Пользователь с таким email уже существует');
       }
+      User.findByIdAndUpdate(req.user._id,
+        { name: name.toString(), email: email.toString() }, { runValidators: true })
+        .then((anyUser) => {
+          if (anyUser === null) {
+            throw new NotFoundError('Пользователь с указанным id не найден');
+          } else {
+            res.send({ data: anyUser });
+          }
+        })
+        .catch((err) => {
+          if (err.name === 'ValidationError') {
+            const error = new ValidationError('Переданы некорректные данные пользователя');
+            next(error);
+          } else {
+            next(err);
+          }
+        });
     })
-    .catch((err) => {
-      if (err.name === 'ValidationError') {
-        const error = new ValidationError('Переданы некорректные данные пользователя');
-        next(error);
-      } else {
-        next(err);
-      }
-    });
+    .catch(next);
 };
 
 module.exports.createUser = (req, res, next) => {
