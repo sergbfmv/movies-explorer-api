@@ -6,8 +6,8 @@ const { createUser, login } = require('../controllers/users');
 
 router.use(requestLogger);
 
-router.use('/signin', createUser);
-router.use('/signup', login);
+router.use('/signup', createUser);
+router.use('/signin', login);
 
 router.use('/', require('./users'));
 router.use('/', require('./movies'));
