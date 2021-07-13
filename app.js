@@ -4,11 +4,15 @@ const bodyParser = require('body-parser');
 require('dotenv').config();
 const helmet = require('helmet');
 const limiter = require('./middlewares/rate-limiter');
+const { requestLogger, errorLogger } = require('./middlewares/logger');
 
 const { PORT = 3000 } = process.env;
 const routers = require('./routes/index');
+const { headError } = require('./middlewares/headError');
 
 const app = express();
+
+app.use(requestLogger);
 
 app.use(limiter);
 
@@ -26,15 +30,9 @@ app.use(helmet());
 
 app.use('/', routers);
 
-app.use((err, req, res, next) => {
-  const { statusCode = 500, message } = err;
-  res.status(statusCode).send({
-    message: statusCode === 500
-      ? 'На сервере произошла ошибка'
-      : message,
-  });
-  next();
-});
+app.use(errorLogger);
+
+app.use(headError);
 
 app.listen(PORT, () => {
   // eslint-disable-next-line no-console

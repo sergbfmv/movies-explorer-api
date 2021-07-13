@@ -1,8 +1,9 @@
 const router = require('express').Router();
 const { celebrate, Joi } = require('celebrate');
-const { getUserMe, updateUser } = require('../controllers/users');
+const {
+  getUserMe, updateUser, createUser, login,
+} = require('../controllers/users');
 const auth = require('../middlewares/auth');
-const { createUser, login } = require('../controllers/users');
 
 router.post('/signup', celebrate({
   body: Joi.object().keys({

@@ -1,5 +1,4 @@
 const Movie = require('../models/movie');
-const NotFoundError = require('../errors/not-found-error');
 const ValidationError = require('../errors/validation-error');
 const ForbiddenError = require('../errors/forbidden-error');
 
@@ -49,16 +48,31 @@ module.exports.createMovie = (req, res, next) => {
 };
 
 module.exports.deleteMovie = (req, res, next) => {
-  Movie.findOneAndRemove({ movieId: req.params.movieId })
+  Movie.findById(req.params.movieId)
     .then((movie) => {
       if (movie === null) {
-        throw new NotFoundError('Фильм не найден');
+        throw new ValidationError('Такого фильма не существует');
       }
-      if (movie.owner === req.user._id) {
+      if (movie.owner.toString() !== req.user._id.toString()) {
         throw new ForbiddenError('Нельзя удалять чужие фильмы!');
       }
-      Movie.findByIdAndRemove(req.movieId)
-        .then((item) => res.send({ data: item }));
+      Movie.findByIdAndRemove(req.params.movieId)
+        .then((anyMovie) => res.send({ data: anyMovie }))
+        .catch((err) => {
+          if (err.name === 'CastError') {
+            const error = new ValidationError('Фильм с указанным id не найден');
+            next(error);
+          } else {
+            next(err);
+          }
+        });
     })
-    .catch(next);
+    .catch((err) => {
+      if (err.name === 'TypeError') {
+        const error = new ValidationError('Фильм с указанным id не найден');
+        next(error);
+      } else {
+        next(err);
+      }
+    });
 };
