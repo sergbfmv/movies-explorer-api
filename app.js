@@ -13,7 +13,7 @@ const { headError } = require('./middlewares/headError');
 const allowedCors = [
   'https://api.serg-movies.diploma.nomoredomains.monster',
   'http://api.serg-movies.diploma.nomoredomains.monster',
-  'localhost:3000',
+  'http://localhost:3000',
 ];
 
 const app = express();
