@@ -11,8 +11,8 @@ const routers = require('./routes/index');
 const { headError } = require('./middlewares/headError');
 
 const allowedCors = [
-  'https://api.serg-movies.diploma.nomoredomains.monster',
-  'http://api.serg-movies.diploma.nomoredomains.monster',
+  'https://serg-movies.diploma.nomoredomains.monster',
+  'http://serg-movies.diploma.nomoredomains.monster',
   'http://localhost:3000',
 ];
 
