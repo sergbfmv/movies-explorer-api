@@ -1,5 +1,6 @@
 const Movie = require('../models/movie');
 const ValidationError = require('../errors/validation-error');
+const ForbiddenError = require('../errors/forbidden-error');
 
 module.exports.getMovies = (req, res, next) => {
   Movie.find({})
@@ -52,7 +53,9 @@ module.exports.deleteMovie = (req, res, next) => {
       if (movie === null) {
         throw new ValidationError('Такого фильма не существует');
       }
-
+      if (movie.owner.toString() !== req.user._id.toString()) {
+        throw new ForbiddenError('Нельзя удалять чужие фильмы!');
+      }
       Movie.findByIdAndRemove(req.params.movieId)
         .then((anyMovie) => res.send({ data: anyMovie }))
         .catch((err) => {
